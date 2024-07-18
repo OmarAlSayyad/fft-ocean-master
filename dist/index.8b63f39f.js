@@ -1,0 +1,2 @@
+THREE.ShaderLib.rain={uniforms:{texture:{type:"t",value:null}},vertexShader:"attribute vec3 color;\nvarying vec3 vColor;\nvoid main() {\n  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n  vColor = color;\n  gl_PointSize = 50.0 * abs( modelViewMatrix[1].y );\n  gl_Position = projectionMatrix * mvPosition;\n}",fragmentShader:"uniform sampler2D texture;\nvarying vec3 vColor;\nvoid main() {\n  vec4 startColor = vec4( vColor, 1.0 );\n  vec4 finalColor;\n  gl_FragColor = texture2D( texture, gl_PointCoord );\n}"};
+//# sourceMappingURL=index.8b63f39f.js.map

@@ -1,0 +1,22 @@
+{
+    "name": "fft-ocean",
+    "version": "1.0.0",
+    "description": "A project for ocean simulation",
+    "scripts": {
+      "start": "parcel index.html",
+      "build": "parcel build index.html"
+    },
+    "dependencies": {
+      "three": "^0.130.0"
+    },
+    "devDependencies": {
+      "parcel": "^2.0.0"
+    },
+    "targets": {
+      "default": {
+        "distDir": "dist",
+        "sourceMap": true
+      }
+    }
+  }
+  
