@@ -51,7 +51,29 @@
 				background-color: #3333cc;
 				color: #fff;
 			}
-		</style>     
+		</style>  
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+			}
+			.sidebar {
+				position: fixed;
+				top: 10%;
+				right: 0;
+				width: 250px;
+				background-color: #f8f8f8;
+				padding: 10px;
+				border: 1px solid #ccc;
+				box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+			}
+			.sidebar h2 {
+				margin-top: 0;
+				font-size: 1.2em;
+			}
+			.sidebar div {
+				margin-bottom: 10px;
+			}
+		</style>   
     <link href="js/libs/messg.css" rel="stylesheet">
 	</head>
 	<body>
@@ -65,6 +87,17 @@
 				<li key="interstellar">Interstellar</li>
 				<li key="apocalypse">Apocalypse</li>
 			</ul>
+		</div>
+
+		<div class="sidebar">
+			<h2>Ship Parameters</h2>
+			<div>Weight: <span id="weightValue">0</span> N</div>
+			<div>Resistance: <span id="resistanceValue">0</span> N</div>
+			<div>Buoyancy: <span id="buoyancyValue">0</span> N</div>
+			<div>Thrust: <span id="thrustValue">0</span> N</div>
+			<div>Speed: <span id="speedValue">0</span> Km/h</div>
+			<div>Acceleration:<span id="accelerationValue">0</span> m/s*s</div>
+			<div>Position: <span id="positionValue">0</span> m</div>
 		</div>
 
 		<script src="js/libs/three.min.js"></script>		
@@ -82,6 +115,7 @@
 		<script src="js/loaders/MTLLoader.js"></script>
 		<script src="js/effects/Ocean.js"></script>	
 		<script src="js/script.js"></script>
+		<script src="js/ShipThrust.js"></script>
 		<script src="js/ResultantForces.js"></script>
 		<script src="js/demo.js"></script>
 	

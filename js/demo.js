@@ -512,7 +512,7 @@ var DEMO =
 		cubeMap.minFilter = THREE.LinearFilter;
 
 		this.ms_SkyBox.material.uniforms['tCube'].value = cubeMap;
-		this.ms_soundWaves.play();
+		//this.ms_soundWaves.play();
 		
 		
 	},

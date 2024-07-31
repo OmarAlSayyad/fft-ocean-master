@@ -18,23 +18,25 @@ class Forces {
         this.position = 0; // Initial Position
         this.timeInterval = 0.1; // Time Interval in Seconds
 
+        this.Power=0;
+
         // Initialize the weight force
         this.W = this.calculateWeightForce();
 
-        // GUI Controls
-        this.guiControls = {
-            ft: 0,
-            addLoad: () => {
-                this.FT = parseFloat(this.guiControls.ft);
-                this.updateForces();
-                this.updateSpeedAndPosition();
-            }
+         // GUI Controls
+         this.guiControls = {
+            power: 0, // Engine power slider value
         };
 
         var gui = new dat.GUI();
         dat.GUI.toggleHide();
-        gui.add(this.guiControls, 'ft').name('Thrust force');
-        gui.add(this.guiControls, 'addLoad').name('Add changes');
+
+        // Add a slider to control engine power
+        gui.add(this.guiControls, 'power', 0, 100000000).name('Engine Power').onChange(value => {
+            this.Power = parseFloat(value);
+            this.updateForces();
+            this.updateSpeedAndPosition();
+        });
 
         // Start the update loop
         this.startUpdateLoop();
@@ -42,9 +44,19 @@ class Forces {
 
     updateForces() {
         this.FHD = this.calculateTotalResistance(this.velocity);
+
+      this.t=new ShipThrust(3, 120, 5, 0.6, this.Power, 0.7, this.velocity, this.FHD);
+   
+      this.FT= this.t.thrust;
+
         this.Fb = this.calculateBuoyantForce();
         this.F = this.sumOfForces();
         this.acceleration = this.calculateAcceleration();
+        this.updateSidebar();
+
+        
+
+
     }
 
     // Calculate Total Resistance based on velocity
@@ -117,6 +129,7 @@ class Forces {
             console.log(`Weight = ${this.W}`);
             console.log(`Resistance = ${this.FHD}`);
             console.log(`Buoyancy = ${this.Fb}`);
+            console.log(`Thrust = ${this.FT}`);
 
             // Log the current state before updating
             console.log(`Current state: velocity = ${this.velocity}, acceleration = ${this.acceleration}, position = ${this.position}`);
@@ -138,7 +151,7 @@ class Forces {
 
             // Smoothly update DEMO.ms_Commands.movements.speed to match this.velocity
             let speedDifference = this.actualSpeed - DEMO.ms_Commands.movements.speed;
-            DEMO.ms_Commands.movements.speed += (speedDifference * 0.1) / 3; // Adjust the factor as needed for smoother transitions
+            DEMO.ms_Commands.movements.speed += (speedDifference * 0.1) *0.60; // Adjust the factor as needed for smoother transitions
             console.log(`Actual Speed: ${DEMO.ms_Commands.movements.speed} m/s`);
 
             // Update the ship position
@@ -154,6 +167,16 @@ class Forces {
     // Calculate Reynolds number (simple example)
     calculateReynoldsNumber() {
         return 1e6; // Placeholder value; typically depends on ship dimensions and velocity
+    }
+
+    updateSidebar() {
+        document.getElementById('weightValue').innerText = this.W.toFixed(2);
+        document.getElementById('resistanceValue').innerText = this.FHD.toFixed(2);
+        document.getElementById('buoyancyValue').innerText = this.Fb.toFixed(2);
+        document.getElementById('thrustValue').innerText = this.FT.toFixed(2);
+        document.getElementById('speedValue').innerText = Math.floor(this.velocity * 3.6);
+        document.getElementById('accelerationValue').innerText =this.acceleration.toFixed(2);
+        document.getElementById('positionValue').innerText = this.position.toFixed(2);
     }
 }
 
