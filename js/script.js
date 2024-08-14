@@ -1,130 +1,68 @@
-//import * as THREE from 'three';
-//import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-//import *as dat from 'dat.gui';
-//import { min } from 'three/examples/jsm/nodes/Nodes.js';
-
-// const render=new THREE.WebGLRenderer(); 
-
-// render.setSize(window.innerWidth,window.innerHeight);
- 
-// document.body.appendChild(render.domElement);
-
-// const scene= new THREE.Scene();
-
-// const camera=new THREE.PerspectiveCamera(
-//     45,
-//     window.innerWidth/window.innerHeight,
-//     0.1,
-//     1000
-
-// );
-
-// const orbit=new OrbitControls(camera,render.domElement);
-
-// const axes=new THREE.AxesHelper();
-// scene.add(axes);
-
-// camera.position.set(-10,30,30);
-// orbit.update();
-
-// const boxGeometry=new THREE.BoxGeometry();
-// const boxMeterial=new THREE.MeshBasicMaterial({color:0x00ff00});
-// const Box=new THREE.Mesh(boxGeometry,boxMeterial);
-// scene.add(Box);
- 
-// const planeGeometry = new THREE.PlaneGeometry(30,30);
-// const planeMeteria=new THREE.MeshBasicMaterial({
-//     color:0xFFFFFF,
-//     side:THREE.DoubleSide
-// });
-
-// const plane=new THREE.Mesh(planeGeometry,planeMeteria);
-// scene.add(plane);
-// plane.rotation.x= -0.5 * Math.PI;
-
-// const sphereGeometry=new THREE.SphereGeometry();
-// const sphereMaterial=new THREE.MeshLambertMaterial({
-//     color:0x0000FF,
-//     wireframe:false
-// });
-
-// const sphere=new THREE.Mesh(sphereGeometry,sphereMaterial);
-// scene.add(sphere);
-// sphere.position.set(-10,10,0);
-
-// const gridHelper=new THREE.GridHelper(30);
-// scene.add(gridHelper);
-
-//const gui =new dat.GUI();
-// const options ={
-//     sphereColor:'#ffea00',
-//     wireframe:false
-// };
-// gui.addColor(options,'sphereColor').onChange(function(e){
-//     sphere.material.color.set(e);
-// });
-
-// gui.add(options,'wireframe').onChange(function(e){
-// sphere.material.wireframe=e;
-// });
-
-// function animate(time){
-//     Box.rotation.x=time/1000;
-//     Box.rotation.y=time/1000;
-//     render.render(scene,camera);
-
-// }
-
-//render.setAnimationLoop(animate);
-
-
 class Stability {
     constructor() {
-        this.m = 12000000;
+        this.m = 3000000;
         this.gravity = 9.8;
         this.Kmt = 15;
         this.kg = [];
-        this.wight = [];
+        this.weight = [];
         this.Gm = 5;
+        this.ShipDisplacement = this.m;
+        this.gravityForce = 0;
+        this.count=0;
+        this.wightAdded=0
+        this.HorizontalDisplacement=0;
+        this.d=0;
 
         this.guiControls = {
-            wight: 0,
+            weight: 0,
             kg: 0,
+            d:0,
             addLoad: () => {
-                this.wight.push(this.guiControls.wight*1000);
+                this.count=0;
+                this.weight.push(this.guiControls.weight * 1000);
                 this.kg.push(this.guiControls.kg);
-                this.WightCarrying();
-            }
+                this.wightAdded=this.guiControls.weight * 1000;
+                this.d=this.guiControls.d;
+                this.updateWeightCarrying();
+            },
+            loadLose: () => {
+                this.count=1;
+                this.weight.push(this.guiControls.weight * 1000*-1);
+                this.kg.push(this.guiControls.kg);
+                this.wightAdded=this.guiControls.weight * 1000;
+                this.updateWeightCarrying();
+            },
+
         };
 
         var gui = new dat.GUI();
         dat.GUI.toggleHide();
-        gui.add(this.guiControls, 'wight').name('Weight');
+        gui.add(this.guiControls, 'weight').name('Weight');
         gui.add(this.guiControls, 'kg').name('Kg');
+        gui.add(this.guiControls, 'd').name('Distance');
         gui.add(this.guiControls, 'addLoad').name('Add Load');
-
+        gui.add(this.guiControls, 'loadLose').name('Load Separation');
     }
-    
 
-    WightCarrying() {
-        let Mom = [];
+    updateWeightCarrying() {
+        let moments = [];
         let i = 0;
-        while (i < this.wight.length) {
-            Mom[i] = this.wight[i] * this.kg[i];
+        while (i < this.weight.length) {
+            moments[i] = this.weight[i] * this.kg[i];
             i++;
         }
 
-        let Wights = 0, Moms = 0;
+        let totalWeights = 0, totalMoments = 0;
         i = 0;
-        while (i < this.wight.length) {
-            Wights += this.wight[i];
-            Moms += Mom[i];
+        while (i < this.weight.length) {
+            totalWeights += this.weight[i];
+            totalMoments += moments[i];
             i++;
         }
 
-        let Kgs = Wights ? Moms / Wights : 0; // Avoid division by zero
+        let avgKg = totalWeights ? totalMoments / totalWeights : 0;
 
-        this.Gm = this.Kmt - Kgs;
+        this.Gm = this.Kmt - avgKg;
 
         if (this.Gm > 0) {
             console.log('Ship is stable.');
@@ -133,23 +71,35 @@ class Stability {
         } else {
             console.log('Ship is unstable.');
         }
-       let sum=Wights/1000;
-        console.log('The sum of wight carrying',sum);
-        console.log('Moms',Moms);
-        console.log('the sum of KGS',Kgs);
-        
 
-        this.CalculateDisplacement(Wights);
+        let weightSum = totalWeights / 1000;
+        console.log('Total weight carrying:', weightSum);
+        console.log('Total moments:', totalMoments);
+        console.log('Average KG:', avgKg);
+
+        this.calculateDisplacement(this.wightAdded);
+        window.forces.updateForces(); // Ensure forces are updated after displacement change
     }
 
-    CalculateDisplacement(Wights) {
-        let ShipWights = this.m * this.gravity;
-        let ShipDisplacement = (ShipWights + Wights)/1000;
-        console.log('Ship Displacement:', ShipDisplacement);
+    calculateDisplacement(Weight) {
+        let shipWeight = this.m * this.gravity;
+        if(this.count===0){
+        this.ShipDisplacement = this.ShipDisplacement+Weight ;
+        }
+        else{
+            this.ShipDisplacement = this.ShipDisplacement-Weight ;
+        }
+        this.gravityForce = this.ShipDisplacement * this.gravity;
+
+        this.HorizontalDisplacement+=(this.wightAdded*this.d)/this.ShipDisplacement;
+   
+        console.log('Ship Displacement:', this.ShipDisplacement);
+        console.log('Horizontal Displacement:', this.HorizontalDisplacement);
+        console.log('Gravity Force:', this.gravityForce);
     }
+
+
 }
 
-// Assuming you have a three.js scene setup already
-window.stable=new Stability();
-//const stability = new Stability();
-//stability.WightCarrying();
+// Initialize the Stability class
+window.stable = new Stability();

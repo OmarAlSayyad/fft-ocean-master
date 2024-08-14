@@ -40,27 +40,18 @@ var DEMO =
 
 		this.ms_Scene = new THREE.Scene();
 
-			// 		// Constants
-			// this.pitch = 1.2;
-			// this.rpm = 10;
-			// this.diameter = 0.5;
-			// this.efficiency = 0.6;
-			// this.power = 1000;
-			// this.hullEfficiency = 0.7;
-			// this.waterDensity = 10; // كثافة الماء (kg/m³)
-			// this.volume = 500; // حجم السفينة (m³)
-			// this.mass= 5000;
+			
 
 		this.ms_GroupShip = new THREE.Object3D();
-		this.ms_BlackPearlShip = new THREE.Object3D();
+		this.warShip = new THREE.Object3D();
 		this.ms_Scene.add( this.ms_GroupShip );
-		this.ms_GroupShip.add( this.ms_BlackPearlShip );
+		this.ms_GroupShip.add( this.warShip );
 		
 
 		this.ms_Camera = new THREE.PerspectiveCamera( 55.0, WINDOW.ms_Width / WINDOW.ms_Height, 0.5, 1000000 );
-		this.ms_Camera.position.set( -1500, 500, 10000 );
+		this.ms_Camera.position.set( -650, 400, 3500 );
 		this.ms_Camera.lookAt( new THREE.Vector3() );
-		this.ms_BlackPearlShip.add( this.ms_Camera );
+		this.warShip.add( this.ms_Camera );
 
 		// Initialize Orbit control
 		this.ms_Controls = new THREE.OrbitControls( this.ms_Camera, this.ms_Renderer.domElement );
@@ -160,11 +151,11 @@ var DEMO =
 
 		// Add Black Pearl
 		var loader = new THREE.OBJMTLLoader(this.ms_Loader);
-		this.ms_BlackPearl = null;
+		this.ws_warShip = null;
 		loader.load('/models/war3/ship.obj', '/models/war3/ship.mtl', function (object) {
-			object.position.y = 300.0;
+			object.position.y = 85.0;
 			// Set scale
-			object.scale.set(40.0, 60.0, 30.0); // Adjust the scale if necessar6
+			object.scale.set(12.0, 15.0, 10.5); // Adjust the scale if necessar6
 
 			// Apply material properties
 			if (object.children) {
@@ -180,8 +171,8 @@ var DEMO =
 				});
 			}
 		
-			DEMO.ms_BlackPearlShip.add(object);
-			DEMO.ms_BlackPearl = object;
+			DEMO.warShip.add(object);
+			DEMO.ws_warShip = object;
 		});
 		
 		
@@ -400,7 +391,6 @@ var DEMO =
 
 		this.ms_Scene.add( this.ms_SkyBox );
 
-		// https://stackoverflow.com/questions/3552944/how-to-get-the-anchor-from-the-url-using-jquery
 		var url = window.location.href, idx = url.indexOf("#");
 		var anchor = idx != -1 ? url.substring(idx+1) : null;
 		var environmentParameter = anchor;
@@ -512,7 +502,7 @@ var DEMO =
 		cubeMap.minFilter = THREE.LinearFilter;
 
 		this.ms_SkyBox.material.uniforms['tCube'].value = cubeMap;
-		//this.ms_soundWaves.play();
+		this.ms_soundWaves.play();
 		
 		
 	},
@@ -535,8 +525,8 @@ var DEMO =
 		// Update black ship displacements
 		this.UpdateCommands();
 		this.ms_GroupShip.rotation.y += this.ms_Commands.movements.angle;// rotation ship with press on boutton
-		this.ms_BlackPearlShip.rotation.z = -this.ms_Commands.movements.angle * 10.0;
-		this.ms_BlackPearlShip.rotation.x = this.ms_Commands.movements.speed * 0.00005;//animation for movement the ship front and back
+		this.warShip.rotation.z = -this.ms_Commands.movements.angle * 10.0;
+		this.warShip.rotation.x = this.ms_Commands.movements.speed * 0.00005;//animation for movement the ship front and back
 		var shipDisplacement = (new THREE.Vector3(0, 0, -2)).applyEuler(this.ms_GroupShip.rotation).multiplyScalar( 5.0 * this.ms_Commands.movements.speed );
 		this.ms_GroupShip.position.add( shipDisplacement );
 		
@@ -546,15 +536,15 @@ var DEMO =
 		lastTime = currentTime;
 
 		// Update black ship movements
-		if( this.ms_BlackPearl !== null  )
+		if( this.ws_warShip !== null  )
 		{
 			var animationRatio = 1.0 + this.ms_Commands.movements.speed * 0.05;
-			this.ms_BlackPearl.rotation.y = Math.cos( currentTime * 0.0008 ) * 0.001 - 0.025;
-			this.ms_BlackPearl.rotation.x = Math.sin( currentTime * 0.001154 + 0.78 ) * 0.015 + 0.05;//animation front and back
+			this.ws_warShip.rotation.y = Math.cos( currentTime * 0.0008 ) * 0.001 - 0.025;
+			this.ws_warShip.rotation.x = Math.sin( currentTime * 0.001154 + 0.78 ) * 0.0000000010 + 0.05;//animation front and back
 		}
-		if( this.ms_BlackPearl !== null){
+		if( this.ws_warShip !== null){
 
-		this.ms_BlackPearl.rotation.y=Math.PI/2;
+		this.ws_warShip.rotation.y=Math.PI/2;
 	//	this.count=1;
 		}
 
@@ -565,18 +555,19 @@ var DEMO =
 			let position = 300;
 			const maxAnimation = 1;
 			const minPosition = -1000;
+			DEMO.ms_Commands.movements.speed=0;
 			
 			const animate = () => {
 				// console.log('animation', animation);
 				// console.log('position', position);
 		        if(animation < maxAnimation && animation< 1){
 
-					this.ms_BlackPearl.rotation.z = animation;
-					animation += 0.0005;
+					this.ms_GroupShip.rotation.x = animation;
+					animation += 0.0001;
 				}
 				if ( position > minPosition && animation == 1) {
 					
-					this.ms_BlackPearl.position.y = position;
+					this.ms_GroupShip.position.y = position;
 					position -= 0.3;
 					
 					
@@ -597,51 +588,60 @@ var DEMO =
 			
 		}
 		
-		//Update ship Thrust
+		if ((window.stable.HorizontalDisplacement > 5 || window.stable.HorizontalDisplacement <-5) && this.count==0 ) {
+			this.count=1;
+			let animation = 0;
+			let position = 300;
+			const maxAnimation = 1;
+			const minPosition = -1000;
+			DEMO.ms_Commands.movements.speed=0;
+			
+			const animate = () => {
+				// console.log('animation', animation);
+				// console.log('position', position);
 
-			//  Increase the boat speed
-		// 	this.speed= 0;
-		// 	const timeInterval = 1;
+				if(window.stable.HorizontalDisplacement > 5){
+					if(animation < maxAnimation && animation< 1){	
+						this.ms_GroupShip.position.y -= 0.5;
+						this.ms_GroupShip.rotation.z -= 0.0005;
+							animation += 0.0005;
+					}						
+				}
+				else{
+		        if(animation < maxAnimation && animation< 1){	
+					
+					this.ms_GroupShip.rotation.z = animation;
+					    animation += 0.0005;
+				}		
+			}
+				if ( position > minPosition && animation == 1) {
+					
+					this.ms_GroupShip.position.y = position;
+					position -= 0.3;
+					
+					
+				}
+				 
+				if(animation < maxAnimation || position > minPosition )
+				{
+				requestAnimationFrame(animate);
+				}
+				else
+				{
+					console.log('Animation stopped.');
+				}
+			};
+		
 			
+				animate();
 			
-		// 	var gui = new dat.GUI();
-		// 	dat.GUI.toggleHide();
-		// 	gui.add(this.guiControls, 'wight').name('Weight');
-		// 	gui.add(this.guiControls, 'kg').name('Kg');
-		// 	gui.add(this.guiControls, 'addLoad').name('Add Load');
-		// //ShipThrust shipThrust=new
-		//  window.ShipThrust(this.pitch, this.rpm, this.diameter, this.efficiency, this.power, this.hullEfficiency);
-		
-		// window.ShipThrust.updateShipSpeed(newSpeed, timeInterval);
-		// 	console.log(`\n--- Update ---`);
-		// 	console.log(`Time: ${timeInterval} s`);
-		// 	console.log(`Boat speed: ${newSpeed.toFixed(2)} m/s`);
-		// 	console.log(`Boat position: ${window.ShipThrust.position.toFixed(2)} m`);
-		// 	console.log(`Thrust Force: ${window.ShipThrust.thrustForce().toFixed(2)} N`);
-		
-		
+		}
 	
-		// // Initial calculations
-		// console.log("Initial calculations:");
-		// console.log(`Initial speed: ${speed} m/s`);
-		
-		// // Update the boat speed every second
-		// const intervalId = setInterval(() => {
-		// 	speed += 1; // Example increment in speed
-		// 	updateBoatSpeed(speed, timeInterval);
-		
-		// 	// Stop the simulation after 50 seconds for this example
-		// 	if (speed >= 50) {
-		// 		clearInterval(intervalId);
-		// 	}
-		// }, timeInterval * 1000);
-		
 
 		// Update rain
 		if( this.ms_Raining ) {
 			var seed = 1;
 			var fastRandom = function fastRandom() {
-				// https://stackoverflow.com/questions/521295/javascript-random-seeds
 				var x = Math.sin( seed++ ) * 10000;
 				return x - Math.floor( x );
 			}

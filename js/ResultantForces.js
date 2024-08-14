@@ -1,6 +1,6 @@
 class Forces {
     constructor() {
-        this.mass = 12000000; // Mass of the ship
+        this.mass = 3000000; // Mass of the ship
         this.gravity = 9.8; // Acceleration due to gravity
         this.FT = 0; // Ship Thrust
         this.FHD = 0; // Total Resistance
@@ -15,17 +15,31 @@ class Forces {
         this.V = 12000; // Ship Volume
         this.velocity = 0; // Initial Velocity
         this.acceleration = 0; // Initial Acceleration
-        this.position = 0; // Initial Position
+        this.distanse=0;
+        this.position = { x: 0, y: 0, z: 0 }; // Initial position (m)
         this.timeInterval = 0.1; // Time Interval in Seconds
+        this.Angle = 0; // Ship heading angle in degrees
+        this.deltaAngle=0;
+
+        this.length=125;
 
         this.Power=0;
+        this.Torque=0;
+        this.angularAcceleration=0;
+        this.angularVelocity = 0;
+        this.r=156;
+
+
+        this.direction = { x: 0, z: -1 }; // Initial direction facing -z axis
 
         // Initialize the weight force
         this.W = this.calculateWeightForce();
-
+      
+        this.shipYaw = new ShipYaw(this.length, window.stable.ShipDisplacement,  0.01, 0.2);
          // GUI Controls
          this.guiControls = {
             power: 0, // Engine power slider value
+            angle:0,
         };
 
         var gui = new dat.GUI();
@@ -33,31 +47,82 @@ class Forces {
 
         // Add a slider to control engine power
         gui.add(this.guiControls, 'power', 0, 100000000).name('Engine Power').onChange(value => {
-            this.Power = parseFloat(value);
+            this.Power =Math.abs( parseFloat(value));
             this.updateForces();
             this.updateSpeedAndPosition();
         });
 
-        // Start the update loop
-        this.startUpdateLoop();
+        gui.add(this.guiControls, 'angle', -35, 35).name('Angle').onChange(value => {
+         this.Angle=parseFloat(value);
+         
+         this.rudderAngleRadians = (this.Angle * Math.PI) / 180;
+       //  this.rotationAngle=this.shipYaw.updateYaw(this.rudderAngleRadians,this.velocity);
+      //  this.deltaAngle=Math.abs( rudderAngleRadians-this.deltaAngle); 
+
+         this.updateForces();
+         this.updateSpeedAndPosition();
+        });
+
+
     }
 
-    updateForces() {
-        this.FHD = this.calculateTotalResistance(this.velocity);
+    // updateForces() {
+    //     this.r=this.calculateDistanceOfRotatoinCenter();
+    //     this.FHD = this.calculateTotalResistance(this.velocity);
+    //     this.t=new ShipThrust(3, 120, 5, 0.6, this.Power, 0.7, this.velocity, this.FHD);
+    //     this.FT= this.t.thrust;
+    //     this.Fb = this.calculateBuoyantForce();
 
-      this.t=new ShipThrust(3, 120, 5, 0.6, this.Power, 0.7, this.velocity, this.FHD);
-   
-      this.FT= this.t.thrust;
+    //     if(window.stable.gravityForce!=0){
+    //     this.W= window.stable.gravityForce;
+    //     }
+  
+    //     this.F = this.sumOfForces();
 
-        this.Fb = this.calculateBuoyantForce();
-        this.F = this.sumOfForces();
-        this.acceleration = this.calculateAcceleration();
-        this.updateSidebar();
+    //     if(this.Angle != 0){ 
+    //         this.Torque=this.r * this.F;
+    //         this.acceleration=this.calculateAngularAcceleration();
+    //     }
+    //     else{
+    //     this.acceleration = this.calculateAcceleration();
+    //     }
+    //     this.updateSidebar();
+
 
         
 
 
+    // }
+    updateForces() {
+       // this.r = this.calculateDistanceOfRotatoinCenter();
+        this.FHD = this.calculateTotalResistance(this.velocity);
+        this.t = new ShipThrust(3, 360, 5, 0.6, this.Power, 0.7, this.velocity, this.FHD);
+        this.FT = this.t.thrust;
+        this.Fb = this.calculateBuoyantForce();
+        if(this.Angle!=0){
+       
+        }
+        if(window.stable.gravityForce != 0){
+            this.W = window.stable.gravityForce;
+        }
+    
+        this.F = this.sumOfForces();
+    
+       // if(this.Angle != 0) { 
+       //     this.Torque = this.r *this.mass * this.velocity;
+       //     this.angularAcceleration = this.calculateAngularAcceleration();
+       // } else {
+        if (this.Angle !== 0) {
+            // Update the ship's yaw using the velocity
+            this.rotationAngle = this.shipYaw.updateYaw(this.rudderAngleRadians, this.velocity);
+        }
+            this.acceleration = this.calculateAcceleration();
+        //}
+    
+        this.updateSidebar();
     }
+
+
 
     // Calculate Total Resistance based on velocity
     calculateTotalResistance(velocity) {
@@ -98,15 +163,23 @@ class Forces {
         return 0.5 * this.airDensity * this.crossSectionalAreaAir * C_a * Math.pow(velocity, 2);
     }
 
+    calculateDisplacedVolume() {
+        return window.stable.ShipDisplacement / this.waterDensity;
+    }
+
+
     // Calculate Buoyant Force
     calculateBuoyantForce() {
+        if (window.stable.ShipDisplacement != 0) {
+            this.V = this.calculateDisplacedVolume();
+        }
         return this.waterDensity * this.V * this.gravity;
     }
 
-    // Calculate Weight Force
-    calculateWeightForce() {
-        return this.mass * this.gravity;
-    }
+    // // Calculate Weight Force
+     calculateWeightForce() {
+         return this.mass * this.gravity;
+     }
 
     // Sum of Forces
     sumOfForces() {
@@ -115,59 +188,128 @@ class Forces {
 
     // Calculate Acceleration
     calculateAcceleration() {
-        return this.F / this.mass;
+        return this.F / window.stable.ShipDisplacement;
     }
 
-    // Update Speed and Position
-    updateSpeedAndPosition() {
-        // Clear any existing interval to avoid multiple intervals running simultaneously
-        if (this.intervalId) {
+    calculateAngularAcceleration(){
+        this.I=Math.pow(100, 2) * window.stable.ShipDisplacement;
+        return this.Torque/this.I;
+    }
+
+    
+
+updateSpeedAndPosition() {
+    if (this.intervalId) {
+        clearInterval(this.intervalId);
+    }
+
+    this.intervalId = setInterval(() => {
+        console.log(`Weight = ${this.W}`);
+        console.log(`Resistance = ${this.FHD}`);
+        console.log(`Buoyancy = ${this.Fb}`);
+        console.log(`Thrust = ${this.FT}`);
+        console.log(`Angular Acceleration = ${this.angularAcceleration}`);
+        console.log(`Torque = ${this.Torque}`);
+        console.log(`r = ${this.r}`);
+        console.log(`Angular Velocity = ${this.angularVelocity}`);
+        console.log(`rotationAngle = ${this.rotationAngle}`);
+        console.log(`rotationVelo = ${this.shipYaw.omega_y}`);
+        console.log(`waterVelo = ${this.shipYaw.waterVelocity}`);
+
+        // Ensure all properties are numbers before calculations
+        if (isNaN(this.velocity) || isNaN(this.acceleration)) {
+            console.error('One or more properties are NaN. Stopping simulation.');
             clearInterval(this.intervalId);
+            return;
         }
-
-        this.intervalId = setInterval(() => {
-            console.log(`Weight = ${this.W}`);
-            console.log(`Resistance = ${this.FHD}`);
-            console.log(`Buoyancy = ${this.Fb}`);
-            console.log(`Thrust = ${this.FT}`);
-
-            // Log the current state before updating
-            console.log(`Current state: velocity = ${this.velocity}, acceleration = ${this.acceleration}, position = ${this.position}`);
-
-            // Ensure all properties are numbers before calculations
-            if (isNaN(this.velocity) || isNaN(this.acceleration) || isNaN(this.position)) {
-                console.error('One or more properties are NaN. Stopping simulation.');
+        if(window.stable.Gm < 0)
+       {
+             this.inter=setInterval(()=>{
+                DEMO.ms_Commands.movements.speed-=0.01;
+            if( DEMO.ms_Commands.movements.speed<0.1){
+                DEMO.ms_Commands.movements.speed=0;
+                console.log('problem in ship');
+                clearInterval(this.inter);
                 clearInterval(this.intervalId);
-                return;
+                return ;
             }
 
-            // Update the ship speed
+             },this.timeInterval*1000);
+            
+
+       }
+        if(this.Angle === 0) {
             this.velocity = this.acceleration * this.timeInterval + this.velocity;
             console.log(`Speed: ${this.velocity} m/s`);
+        } else {
+          this.angularVelocity = this.shipYaw.omega_y;
+          // this.velocity =this.shipYaw.omega_y*10000000;//*100; // v = ω * r
+          this.angularAcceleration=this.shipYaw.alpha_y;
+           this.updateDirection(); // Update direction based on angle
+       }
 
-            if (this.velocity <= 40) {
-                this.actualSpeed = this.velocity;
-            }
+        if (this.velocity <= 40) {
+            this.actualSpeed = this.velocity;
+        }
 
-            // Smoothly update DEMO.ms_Commands.movements.speed to match this.velocity
-            let speedDifference = this.actualSpeed - DEMO.ms_Commands.movements.speed;
-            DEMO.ms_Commands.movements.speed += (speedDifference * 0.1) *0.60; // Adjust the factor as needed for smoother transitions
-            console.log(`Actual Speed: ${DEMO.ms_Commands.movements.speed} m/s`);
+        let speedDifference = this.actualSpeed - DEMO.ms_Commands.movements.speed;
+        DEMO.ms_Commands.movements.speed += (speedDifference * 0.1) * 0.60; // Adjust the factor as needed for smoother transitions
+        console.log(`Actual Speed: ${DEMO.ms_Commands.movements.speed} m/s`);
 
-            // Update the ship position
-            this.position = 0.5 * this.acceleration * Math.pow(this.timeInterval, 2) + this.velocity * this.timeInterval + this.position;
-            console.log(`New position: ${this.position} m`);
+        this.updatePosition();
+        console.log(`New position: x = ${this.position.x} m, z = ${this.position.z} m`);
 
-            // Recalculate forces with updated velocity
-            this.updateForces();
+        this.updateForces();
+        console.log(`Time Interval: ${this.timeInterval} `);
 
-        }, this.timeInterval * 1000); // Execute every 0.1 second
-    }
+    }, this.timeInterval * 1000); // Execute every 0.1 second
+}
 
     // Calculate Reynolds number (simple example)
     calculateReynoldsNumber() {
         return 1e6; // Placeholder value; typically depends on ship dimensions and velocity
     }
+
+    calculateDistanceOfRotatoinCenter(){
+        const angleRadians = (this.Angle * Math.PI) / 180;
+     if (this.Angle === 0) return Infinity; // Infinite radius for straight movement
+       // return Math.pow(this.velocity, 2) / (this.gravity * Math.tan(angleRadians));
+        return  Math.pow(this.velocity, 2) /(this.acceleration*Math.tan(angleRadians));
+    }
+
+   
+    updateDirection() {
+        const angleRadians = (this.Angle * Math.PI) / 180;
+
+        // Apply rotation based on the angle to the current direction
+        const cosAngle = Math.cos(angleRadians);
+        const sinAngle = Math.sin(angleRadians);
+
+        const newX = this.direction.x * cosAngle - this.direction.z * sinAngle;
+        const newZ = this.direction.x * sinAngle + this.direction.z * cosAngle;
+
+        this.direction.x = newX;
+        this.direction.z = newZ;
+    }
+
+    updatePosition() {
+        if(this.Angle > 0) {
+        DEMO.ms_Commands.movements.angle = -this.rotationAngle  ;
+        }
+        if(this.Angle < 0){
+            DEMO.ms_Commands.movements.angle = this.rotationAngle  ;
+
+        }
+        // Calculate the new position
+        const deltaX = this.velocity * this.direction.x * this.timeInterval;
+        const deltaZ = this.velocity * this.direction.z * this.timeInterval;
+
+        this.position.x += deltaX;
+        this.position.z += deltaZ;
+    }
+
+
+    
 
     updateSidebar() {
         document.getElementById('weightValue').innerText = this.W.toFixed(2);
@@ -176,8 +318,14 @@ class Forces {
         document.getElementById('thrustValue').innerText = this.FT.toFixed(2);
         document.getElementById('speedValue').innerText = Math.floor(this.velocity * 3.6);
         document.getElementById('accelerationValue').innerText =this.acceleration.toFixed(2);
-        document.getElementById('positionValue').innerText = this.position.toFixed(2);
+        document.getElementById('angularAcceleration').innerText =this.angularAcceleration.toFixed(2);
+        
+        document.getElementById('position.X').innerText = this.position.x;
+        document.getElementById('position.Z').innerText = this.position.z;
+        document.getElementById('Ship Displacement').innerText = window.stable.ShipDisplacement/1000;
     }
+
+
 }
 
 // Initialize the Forces class
