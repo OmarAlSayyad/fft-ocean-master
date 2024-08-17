@@ -55,6 +55,7 @@ class Forces {
             this.updateForces();
             this.updateSpeedAndPosition();
         });
+        
 
         gui.add(this.guiControls, 'angle', -35, 35).name('Angle').onChange(value => {
          this.Angle=parseFloat(value);
@@ -71,7 +72,7 @@ class Forces {
     }
 
     updateForces() 
-    {this.crossSectionalAreaWater =window.stable.crossSectionalAreaWater;
+    {   this.crossSectionalAreaWater =window.stable.crossSectionalAreaWater;
         this.crossSectionalAreaAir =window.stable.crossSectionalAreaAir;
         this.FHD = this.calculateTotalResistance(this.velocity);
         this.t = new ShipThrust(3, 120, 5, 0.6, this.Power, 0.7, this.velocity, this.FHD);
