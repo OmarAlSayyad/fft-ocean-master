@@ -193,7 +193,7 @@ updateSpeedAndPosition() {
             clearInterval(this.intervalId);
             return;
         }
-        if(window.stable.Gm < 0 ||window.stable.HorizontalDisplacement > 5 || window.stable.HorizontalDisplacement <-5 ||  window.forces.rotationAngle < -0.1 || window.forces.rotationAngle > 0.1)
+        if(window.stable.Gm < 0 ||window.stable.HorizontalDisplacement > 5 || window.stable.HorizontalDisplacement <-5)
        {
              this.inter=setInterval(()=>{
                 MAIN.ws_Commands.movements.speed-=0.01;
@@ -261,7 +261,7 @@ updateSpeedAndPosition() {
         MAIN.ws_Commands.movements.angle = -this.rotationAngle /100 ;
         }
         if(this.Angle < 0){
-            MAIN.ws_Commands.movements.angle = -this.rotationAngle/100  ;
+            MAIN.ws_Commands.movements.angle = this.rotationAngle/100  ;
 
         }
         // Calculate the new position
