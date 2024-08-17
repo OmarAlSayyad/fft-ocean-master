@@ -474,16 +474,6 @@ var MAIN =
 				directionalLightPosition = new THREE.Vector3( -0.7, 0.2, -1 );
 				directionalLightColor = new THREE.Color( 1, 0.8, 0.5 );
 				break;
-			case 'interstellar':
-				textureName = 'interstellar';
-				directionalLightPosition = new THREE.Vector3( -0.7, 1.0, -0.4 );
-				directionalLightColor = new THREE.Color( 0.8, 1.0, 0.95 );
-				break;
-			case 'apocalypse':
-				textureName = 'violent_days';
-				directionalLightPosition = new THREE.Vector3( 1, 0.3, 1 );
-				directionalLightColor = new THREE.Color( 1, 0.85, 0.3 );
-				break;
 			default:
 				return;
 		};
@@ -826,7 +816,7 @@ var zCoord = 0;
 			
 		}
 		
-		if ((window.stable.HorizontalDisplacement > 5 || window.stable.HorizontalDisplacement <-5 || window.forces.rotationAngle < -0.1 || window.forces.rotationAngle > 0.1) && this.count==0 ) {
+		if ((window.stable.HorizontalDisplacement > 5 || window.stable.HorizontalDisplacement <-5 ) && this.count==0 ) {
 			this.count=1;
 			let animation = 0;
 			let position = 300;
