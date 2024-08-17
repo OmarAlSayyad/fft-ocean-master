@@ -14,11 +14,15 @@ var MAIN =
 	ws_Environment : "night",
 	ws_Raining : false,
 	count:0,
+	Wind :{
+		wind:0,
 
+	},
 	projectileDirection: {
         x: 0,
         y: 0,
-        z: -1 // Default direction along the Z-axis
+        z: -1 ,// Default direction along the Z-axis
+		
     },
 	ws_Commands : {
 		states : {
@@ -254,13 +258,28 @@ var MAIN =
 
 
 		var gui = new dat.GUI();
-
+		this.guiControls = {
+			fire: () => {    
+				 MAIN.onMouseDown();
+			}
+            
+        };
+ 		gui.add(this.guiControls, 'fire').name('Fire');
+	
         // Add sliders for projectile direction
-        // var projectileFolder = gui.addFolder('Projectile Direction');
-        // projectileFolder.add(this.projectileDirection, 'x', -1, 1).name('Direction X');
-        // projectileFolder.add(this.projectileDirection, 'y', -1, 1).name('Direction Y');
-        // projectileFolder.add(this.projectileDirection, 'z', -1, 1).name('Direction Z');
-        // projectileFolder.open();
+         var projectileFolder = gui.addFolder('Projectile Direction');
+         projectileFolder.add(this.projectileDirection, 'x', -1, 1).name('Direction X');
+         projectileFolder.add(this.projectileDirection, 'y', -1, 1).name('Direction Y');
+         projectileFolder.add(this.projectileDirection, 'z', -1, 1).name('Direction Z');
+		 projectileFolder.add( this.Wind,'wind',0, 60).name('wind');
+		 
+			
+			
+			//.onChange(value => {
+       //    this.wind=parseFloat(value);
+       //  });;
+
+         projectileFolder.open();
 
 		// Initialize UI
 		var gui = new dat.GUI();
@@ -649,11 +668,10 @@ var MAIN =
 			// Set initial position and direction
 			object.position.copy(position);
 			//object.rotation.copy(direction);
-			//object.rotation.x = -1.5;
+			object.rotation.x = -1.5;
 		
 			 this.angleY = Math.atan2(direction.x, direction.z);
-			object.rotation.set(-1.5,this.angleY,0); 
-
+			
 			object.scale.set(12.0, 30.0, 10.5); // Adjust the scale if necessary
 	
 			// Apply material properties
@@ -668,7 +686,10 @@ var MAIN =
 			});
 	
 			// Add the projectile to the scene
-			MAIN.ws_GroupProjectile.add(object);
+			MAIN.projectile.add(object);
+			MAIN.ws_GroupProjectile.add(MAIN.projectile);
+		//	MAIN.projectile.rotation.set(0,this.angleY,0); 
+
 			
 			// Logic to handle movement or lifetime of the projectile
 			MAIN.MoveProjectile(object,direction);
@@ -702,7 +723,7 @@ var MAIN =
 
 	onMouseDown : function (event) {
 		// Check if the left mouse button is pressed (button 0)
-		if (event.button === 0) {
+		//if (event.button === 0) {
 			// Define the initial position and direction of the projectile
 			var position = new THREE.Vector3(MAIN.ws_GroupShip.position.x,MAIN.ws_GroupShip.position.y, MAIN.ws_GroupShip.position.z);
 			// var direction = new THREE.Euler(0, MAIN.ws_Camera.rotation.y, 0);
@@ -711,17 +732,18 @@ var MAIN =
                 MAIN.projectileDirection.y,
                 MAIN.projectileDirection.z
             ).normalize();
+		
 	
 			// Spawn a new projectile
 			MAIN.SpawnProjectile(position, direction);
 
-		}
+		//}
 	},
 	
 	
 	Update : function () {
 		
-		document.addEventListener('mousedown', MAIN.onMouseDown, false);
+	
 
 
 		// Update camera position
