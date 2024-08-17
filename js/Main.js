@@ -713,7 +713,7 @@ var MAIN =
 		
 		document.addEventListener('mousedown', MAIN.onMouseDown, false);
 
-
+		console.log(this.ws_Ocean);
 		// Update camera position
 		if( this.ws_Camera.position.y < 0.0 ) {
 			this.ws_Camera.position.y = 2.0;
