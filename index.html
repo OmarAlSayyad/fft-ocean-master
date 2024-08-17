@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">	
 	<head>
 		<meta charset="utf-8" />
@@ -98,9 +99,13 @@
 			<div>Speed: <span id="speedValue">0</span> Km/h</div>
 			<div>Acceleration:<span id="accelerationValue">0</span> m/s*s</div>
 			<div>Angular Acceleration:<span id="angularAcceleration">0</span> rad/s*s</div>
+			<div>Angular Velocity:<span id="angularVelocity">0</span> rad/s</div>
 			<div>Position.X: <span id="position.X">0</span> m</div>
 			<div>Position.Z: <span id="position.Z">0</span> m</div>
 			<div>Ship Displacement: <span id="Ship Displacement">0</span> ton</div>
+			<div> GM: <span id="averageGM">0</span></div>
+			<div> Distance Wight: <span id="DistanceWight">0</span> m</div>
+		
 		</div>
 
 		<script src="js/libs/three.min.js"></script>		
@@ -118,10 +123,11 @@
 		<script src="js/loaders/MTLLoader.js"></script>
 		<script src="js/effects/Ocean.js"></script>	
 		<script src="js/ShipYaw.js"></script>
+		<script src="js/ShipHeave.js"></script>
 		<script src="js/script.js"></script>
 		<script src="js/ShipThrust.js"></script>
 		<script src="js/ResultantForces.js"></script>
-		<script src="js/demo.js"></script>
+		<script src="js/Main.js"></script>
 	
 
 
@@ -136,9 +142,9 @@
 			var lastTime = ( new Date() ).getTime();
 
 			var WINDOW = {
-				ms_Width : 0,
-				ms_Height : 0,
-				ms_Callbacks : {
+				ws_Width : 0,
+				ws_Height : 0,
+				ws_Callbacks : {
 					70: "WINDOW.ToggleFullScreen()", // Toggle fullscreen
 				},
 
@@ -149,18 +155,18 @@
 					document.onkeydown = function ( inEvent ) { WINDOW.CallAction( inEvent.keyCode ); };
 					window.onresize = function ( inEvent ) {
 						WINDOW.UpdateSize();
-						WINDOW.ResizeCallback( WINDOW.ms_Width, WINDOW.ms_Height );
+						WINDOW.ResizeCallback( WINDOW.ws_Width, WINDOW.ws_Height );
 					};
 				},
 				
 				UpdateSize : function () {
-					this.ms_Width = window.innerWidth ;
-					this.ms_Height = window.innerHeight;
+					this.ws_Width = window.innerWidth ;
+					this.ws_Height = window.innerHeight;
 				},
 				
 				CallAction : function ( inId ) {
-					if ( inId in this.ms_Callbacks ) {
-						eval( this.ms_Callbacks[inId] );
+					if ( inId in this.ws_Callbacks ) {
+						eval( this.ws_Callbacks[inId] );
 						return false;
 					}
 				},
@@ -194,15 +200,15 @@
 
 			WINDOW.Initialize();
 			
-			DEMO.Initialize();
+			MAIN.Initialize();
 
-			WINDOW.ResizeCallback = function ( inWidth, inHeight ) { DEMO.Resize( inWidth, inHeight ); };
-			DEMO.Resize( WINDOW.ms_Width, WINDOW.ms_Height );
+			WINDOW.ResizeCallback = function ( inWidth, inHeight ) { MAIN.Resize( inWidth, inHeight ); };
+			MAIN.Resize( WINDOW.ws_Width, WINDOW.ws_Height );
 
 			var render = function () {
 
 				requestAnimationFrame( render );
-				DEMO.Update();
+				MAIN.Update();
 
 			};
 

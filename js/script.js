@@ -1,17 +1,28 @@
 class Stability {
     constructor() {
-        this.m = 3000000;
+        this.mass = 3000000;
         this.gravity = 9.8;
         this.Kmt = 15;
         this.kg = [];
         this.weight = [];
         this.Gm = 5;
-        this.ShipDisplacement = this.m;
+        this.ShipDisplacement = this.mass;
         this.gravityForce = 0;
         this.count=0;
         this.wightAdded=0
-        this.HorizontalDisplacement=0;
+        this. t=0;
         this.d=0;
+        this.HorizontalDisplacement=0;
+        this.waterDensity = 1000; // Water Density
+        this.airDensity = 1.225; // Air Density
+
+        this.length=125;
+        this.width=15;
+        this.height=30;
+        this.displacedVolume=3000;
+        this.crossSectionalAreaWater = 24;  // Cross-sectional Area of the Ship in Water
+        this.crossSectionalAreaAir = 426; //Cross-sectional Area of the Ship in Air
+
 
         this.guiControls = {
             weight: 0,
@@ -22,15 +33,28 @@ class Stability {
                 this.weight.push(this.guiControls.weight * 1000);
                 this.kg.push(this.guiControls.kg);
                 this.wightAdded=this.guiControls.weight * 1000;
+                this.crossSectionalAreaWater = this.calculateSubmergedCrossSectionalArea();
+                this.crossSectionalAreaAir = this.calculateCrossSectionalAreaAir();
+                if(this.wightAdded!==0){
+                this.updatePositionDueToWeight();
+                    }
                 this.d=this.guiControls.d;
                 this.updateWeightCarrying();
+              
             },
             loadLose: () => {
+                if(this.ShipDisplacement > this.mass){
                 this.count=1;
                 this.weight.push(this.guiControls.weight * 1000*-1);
                 this.kg.push(this.guiControls.kg);
-                this.wightAdded=this.guiControls.weight * 1000;
-                this.updateWeightCarrying();
+                 this.wightAdded=this.guiControls.weight * 1000;
+                 this.updateWeightCarrying();
+                 this.crossSectionalAreaWater = this.calculateSubmergedCrossSectionalArea();
+                 this.crossSectionalAreaAir = this.calculateCrossSectionalAreaAir();
+                 this.updatePositionDueToWeight();
+                }
+              
+               
             },
 
         };
@@ -43,6 +67,80 @@ class Stability {
         gui.add(this.guiControls, 'addLoad').name('Add Load');
         gui.add(this.guiControls, 'loadLose').name('Load Separation');
     }
+
+    
+    calculateInitialDraft() {
+        let initialDisplacement = this.mass * this.gravity / this.waterDensity; // Initial displaced volume in cubic meters
+        return initialDisplacement / (this.length * this.width); // Initial draft in meters
+    }
+
+    // Calculate the new draft after loading weight
+    calculateNewDraft() {
+        this.displacedVolume = this.ShipDisplacement / this.waterDensity; // Displaced volume in cubic meters
+        return this.displacedVolume / (this.length * this.width); // New draft in meters
+    }
+
+    // Calculate draft difference
+    calculateDraftDifference() {
+        let initialDraft = this.calculateInitialDraft();
+        let newDraft = this.calculateNewDraft();
+        return newDraft - initialDraft; // Draft difference in meters
+    }
+
+    // Update the ship's position based on draft difference
+    updatePositionDueToWeight() {
+        let draftDifference = Math.abs(this.calculateDraftDifference());
+       
+        if(this.count===0){
+            this.i=0;
+            const animate = () => {
+                MAIN.ws_GroupShip.position.y -= 0.04;
+
+				if(this.i <= draftDifference )
+                    {this.i+=0.1;
+                    requestAnimationFrame(animate);
+
+                    }
+                
+                };
+                 animate();
+         }
+        else{
+            this.i=0;
+            const animate = () => {
+                MAIN.ws_GroupShip.position.y += 0.04;
+
+				if(this.i <= draftDifference )
+                    {this.i+=0.1;
+                    requestAnimationFrame(animate);
+
+                    }
+               
+                };
+                 animate();
+         
+        
+         } 
+    }
+
+    // Calculate new submerged cross-sectional area
+    calculateSubmergedCrossSectionalArea() {
+        this.newDraft = this.calculateNewDraft();
+        return this.width * this.newDraft; // New cross-sectional area in square meters
+    }
+
+    // Calculate freeboard (height above waterline)
+    calculateFreeboard() {
+        let newDraft = this.calculateNewDraft();
+        return this.height - newDraft; // New freeboard in meters
+    }
+
+    // Calculate new cross-sectional area exposed to air
+    calculateCrossSectionalAreaAir() {
+        let newFreeboard = this.calculateFreeboard();
+        return this.width * newFreeboard; // New cross-sectional area in square meters
+    }
+
 
     updateWeightCarrying() {
         let moments = [];
@@ -82,7 +180,7 @@ class Stability {
     }
 
     calculateDisplacement(Weight) {
-        let shipWeight = this.m * this.gravity;
+        let shipWeight = this.mass * this.gravity;
         if(this.count===0){
         this.ShipDisplacement = this.ShipDisplacement+Weight ;
         }
@@ -96,6 +194,7 @@ class Stability {
         console.log('Ship Displacement:', this.ShipDisplacement);
         console.log('Horizontal Displacement:', this.HorizontalDisplacement);
         console.log('Gravity Force:', this.gravityForce);
+        this.wightAdded=0;
     }
 
 

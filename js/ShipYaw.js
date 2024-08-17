@@ -29,7 +29,9 @@ class ShipYaw {
     computeYawForce(rudderAngle, velocity) {
         let F_rd = this.computeRudderForce(rudderAngle, velocity);
         let I_y = this.computeInertiaMoment();
-        let F_y = (F_rd*(this.length/2)) - this.b_y * I_y * this.omega_y;
+        let R=velocity*this.omega_y*0.02;
+        let F_y = (F_rd * this.length) -(R*(this.length/2))+ ( I_y * this.alpha_y); //(window.forces.FT * this.length) -(window.forces.FHD* this.length);  // (F_rd*(this.length/2)) - (this.b_y*this.length/2) + (I_y* this.alpha_y	) ;//(F_rd * this.length) -(R*(this.length/2))+ ( I_y * this.alpha_y);
+        // let F_y = window.forces.F *this.length/2 *Math.sin(rudderAngle);    //(F_rd*(this.length/2)) - (this.b_y*this.length/2) + (I_y*this.alpha_y	) ;
         return F_y;
     }
 
@@ -39,8 +41,12 @@ class ShipYaw {
         let I_y = this.computeInertiaMoment();
 
         this.alpha_y = F_y / I_y;
-        this.omega_y = (this.alpha_y * this.timeStep) + this.omega_y;
+        this.omega_y = (this.alpha_y * this.timeStep) ;
         this.theta_y = this.omega_y * this.timeStep;
+
+        this.deltaX = velocity * Math.sin(this.omega_y * this.timeStep); // Change in x-position
+        this.deltaZ = velocity * Math.cos(this.omega_y * this.timeStep); // Change in z-position
+
 
         console.log(`theta_y = ${this.theta_y}`);
         console.log(`omega_y = ${this.omega_y}`);
